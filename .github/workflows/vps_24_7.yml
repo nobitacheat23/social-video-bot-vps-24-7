@@ -1,0 +1,137 @@
+name: Cloud VPS 24/7 (Social Video Bot @thegioithread_bot)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'
+
+concurrency:
+  group: social-video-bot-24-7-singleton
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  run-bot-24-7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout Bot, Assets & License Database
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install System FFmpeg, Tesseract OCR (Vietnamese Best LSTM) & Fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ffmpeg \
+            curl \
+            tesseract-ocr \
+            tesseract-ocr-vie \
+            fonts-noto-color-emoji \
+            fonts-noto-core \
+            fonts-liberation \
+            fonts-dejavu-core
+          VIE_PATH=$(dpkg -L tesseract-ocr-vie | grep 'vie.traineddata' | head -n 1 || true)
+          if [ -n "$VIE_PATH" ]; then
+            sudo curl -4 -sSL "https://github.com/tesseract-ocr/tessdata_best/raw/main/vie.traineddata" -o "$VIE_PATH" || true
+          fi
+          fc-cache -f -v || true
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Bot 24/7 with Auto-DB-Backup (5h30m cycle)
+        env:
+          PYTHONIOENCODING: utf-8
+          NO_BROWSER: "1"
+        run: |
+          git config user.name "SocialVideoBot Auto-Save"
+          git config user.email "bot@users.noreply.github.com"
+
+          python watchdog.py &
+          BOT_PID=$!
+
+          # Verify FastAPI & Telegram Bot polling are 100% live within 25s
+          BOT_OK=0
+          for i in $(seq 1 25); do
+            sleep 1
+            STATUS_JSON=$(curl -s http://127.0.0.1:8000/api/bot/status || true)
+            if echo "$STATUS_JSON" | grep -q '"is_running":true'; then
+              echo "✅ Verified @thegioithread_bot is actively polling on Cloud VPS!"
+              BOT_OK=1
+              break
+            fi
+          done
+          if [ "$BOT_OK" -ne 1 ]; then
+            echo "❌ Bot failed to reach polling state! Dumping logs:"
+            cat bot_24_7.log || true
+            exit 1
+          fi
+
+          START_TS=$(date +%s)
+          MAX_SEC=19800  # 5 tiếng 30 phút
+
+          while kill -0 $BOT_PID 2>/dev/null; do
+            sleep 60
+            NOW_TS=$(date +%s)
+            ELAPSED=$((NOW_TS - START_TS))
+
+            # Sao lưu Database Key & Cấu hình (data/bot_auth.db) mỗi 5 phút
+            if [ $((ELAPSED % 300)) -lt 65 ]; then
+              python -c "import sqlite3; c=sqlite3.connect('data/bot_auth.db'); c.execute('PRAGMA wal_checkpoint(PASSIVE)'); c.close()" || true
+              git add data/bot_auth.db
+              find assets/backgrounds -maxdepth 1 -type f -size -20M \( -iname "*.mp4" -o -iname "*.mov" \) -exec git add {} + 2>/dev/null || true
+              if ! git diff --staged --quiet; then
+                git commit -m "Auto-sync bot_auth.db & backgrounds [skip ci]" || true
+                git pull --rebase origin main || true
+                git push origin main || true
+              fi
+            fi
+
+            if [ $ELAPSED -ge $MAX_SEC ]; then
+              echo "5h30m cycle complete, handing over cleanly to next 24/7 instance..."
+              kill -TERM $BOT_PID 2>/dev/null || true
+              sleep 4
+              break
+            fi
+          done
+
+      - name: Save Database & Trigger Next 24/7 Cycle Cleanly
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -c "import sqlite3; c=sqlite3.connect('data/bot_auth.db'); c.execute('PRAGMA wal_checkpoint(TRUNCATE)'); c.close()" || true
+          git add data/bot_auth.db
+          find assets/backgrounds -maxdepth 1 -type f -size -20M \( -iname "*.mp4" -o -iname "*.mov" \) -exec git add {} + 2>/dev/null || true
+          if ! git diff --staged --quiet; then
+            git commit -m "Final sync bot_auth.db before handover [skip ci]" || true
+            git pull --rebase origin main || true
+            git push origin main || true
+          fi
+          gh workflow run "vps_24_7.yml" --ref main || true
+
+      - name: Emergency DB Sync on Failure (No Loop)
+        if: failure()
+        run: |
+          python -c "import sqlite3; c=sqlite3.connect('data/bot_auth.db'); c.execute('PRAGMA wal_checkpoint(TRUNCATE)'); c.close()" || true
+          git add data/bot_auth.db
+          if ! git diff --staged --quiet; then
+            git commit -m "Emergency sync bot_auth.db on failure [skip ci]" || true
+            git pull --rebase origin main || true
+            git push origin main || true
+          fi

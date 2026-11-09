@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shorts & Reels Video Studio - Tự Động Hóa Bình Luận MXH</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Be Vietnam Pro"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-gray-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navbar -->
+  <header class="border-b border-gray-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold bg-gradient-to-r from-white via-gray-200 to-indigo-300 bg-clip-text text-transparent">Social Video AutoStudio</h1>
+        <p class="text-xs text-gray-400">Tự động cào dữ liệu & sản xuất Shorts / Reels / TikTok từ bình luận</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-3">
+      <button onclick="openTelegramModal()" class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition shadow-lg shadow-sky-500/10">
+        <span id="navBotDot" class="w-2 h-2 rounded-full bg-amber-400 mr-2"></span>
+        🤖 Quản Lý Telegram Bot & Key (@citywin2026)
+      </button>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1.5"></span>
+        Live Scraper & Edge-TTS Sẵn Sàng
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left 7 Cols: Scraping & Comment Customization -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Box 1: Input URL & Presets -->
+      <section class="glass-card rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-semibold text-gray-300">1. Nhập Link Bài Viết (Threads, TikTok, Facebook)</label>
+          <span class="text-[11px] text-indigo-400 font-medium">Hỗ trợ link thật 100%</span>
+        </div>
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </span>
+            <input type="text" id="urlInput" placeholder="Dán link bài viết Threads, TikTok hoặc Facebook vào đây..." 
+                   class="w-full pl-10 pr-4 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition text-white placeholder-gray-500">
+          </div>
+          <button id="btnScrape" onclick="scrapePost()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 font-semibold text-sm rounded-xl text-white shadow-lg shadow-indigo-600/30 transition flex items-center space-x-1.5 flex-shrink-0">
+            <span id="scrapeSpinner" class="hidden animate-spin">&#9696;</span>
+            <span id="scrapeBtnLabel">Cào Dữ Liệu</span>
+          </button>
+        </div>
+
+        <!-- Presets & Image Chat Upload Buttons -->
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span class="text-gray-400 font-medium">Chế độ nhanh:</span>
+          <label for="chatImagesInput" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/30 to-rose-500/30 hover:from-amber-500/50 hover:to-rose-500/50 text-amber-200 border border-amber-500/60 font-semibold cursor-pointer transition flex items-center space-x-1 shadow">
+            <span>📸 Tải Ảnh Tin Nhắn (Auto-Cap & Đọc theo thứ tự)</span>
+            <input type="file" id="chatImagesInput" accept="image/*" multiple onchange="uploadChatScreenshots(this, false)" class="hidden">
+          </label>
+          <label id="btnAppendChatImages" for="appendChatImagesInput" class="hidden px-2.5 py-1.5 rounded-lg bg-sky-900/50 hover:bg-sky-800/70 text-sky-200 border border-sky-600/50 cursor-pointer transition">
+            <span>➕ Nối thêm ảnh tiếp theo</span>
+            <input type="file" id="appendChatImagesInput" accept="image/*" multiple onchange="uploadChatScreenshots(this, true)" class="hidden">
+          </label>
+          <button onclick="loadPreset('motvongthread')" class="px-2.5 py-1 rounded-lg bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-600/50 transition">🔥 Demo Threads Viral (@Vietcaigido?)</button>
+          <button onclick="loadPreset('threads_real')" class="px-2.5 py-1 rounded-lg bg-indigo-900/40 hover:bg-indigo-800/60 text-indigo-200 border border-indigo-700/50 transition">🧵 Threads Thực Tế</button>
+          <button onclick="loadPreset('tiktok')" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition">🎵 TikTok Mẫu</button>
+        </div>
+
+        <!-- Smart Filter Controls -->
+        <div class="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
+          <div class="flex items-center space-x-2">
+            <label for="minLikes">Lọc like tối thiểu:</label>
+            <input type="number" id="minLikes" value="0" min="0" step="50" class="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-center text-white text-xs">
+          </div>
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" id="chkFilterSpam" checked class="rounded border-gray-700 text-indigo-600 focus:ring-0">
+            <label for="chkFilterSpam">Tự động lọc spam / link rác</label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Box 2: Post Details & Comments List -->
+      <section class="glass-card rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 class="text-sm font-semibold text-gray-300">2. Nội Dung Bài Viết & Bình Luận</h2>
+          <div class="flex items-center space-x-2">
+            <button onclick="openBulkModal()" class="px-2.5 py-1 text-xs rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center space-x-1">
+              <span>📋 Dán nhanh nhiều bình luận</span>
+            </button>
+            <button onclick="addNewComment()" class="px-2.5 py-1 text-xs rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 flex items-center space-x-1">
+              <span>➕ Thêm 1 bình luận</span>
+            </button>
+            <span id="selectedCountBadge" class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">
+              Đã chọn: 0
+            </span>
+          </div>
+        </div>
+
+        <!-- Original Post Card -->
+        <div id="postCardContainer" class="p-4 rounded-xl bg-gray-900/90 border border-gray-700/80 mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2.5">
+              <img id="postAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" class="w-8 h-8 rounded-full border border-gray-600">
+              <div>
+                <span id="postAuthor" class="font-bold text-sm text-white">Chưa có bài viết</span>
+                <span id="postPlatformTag" class="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 uppercase">THREADS</span>
+              </div>
+            </div>
+            <span id="postLikes" class="text-xs text-rose-400 font-medium">❤️ 0 likes</span>
+          </div>
+          <textarea id="postContent" rows="2" class="w-full bg-gray-950/70 border border-gray-800 rounded-lg p-2 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 transition" placeholder="Nội dung bài viết gốc..."></textarea>
+          <div class="mt-2 flex items-center justify-end space-x-2">
+            <button onclick="previewItemTTS('post')" class="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-indigo-300 flex items-center space-x-1">
+              <span>🔊 Nghe thử giọng đọc bài đăng</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Comments Selection Table -->
+        <div class="space-y-3 max-h-[480px] overflow-y-auto pr-1" id="commentsList">
+          <p class="text-center text-sm text-gray-500 py-10">Dán link bài viết rồi bấm "Cào Dữ Liệu" hoặc bấm "Dán nhanh nhiều bình luận".</p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right 5 Cols: Studio Settings, Live Card Preview & Render -->
+    <div class="lg:col-span-5 space-y-6">
+
+      <!-- Box 3: Studio Settings -->
+      <section class="glass-card rounded-2xl p-5 shadow-xl space-y-4">
+        <h2 class="text-sm font-semibold text-gray-300 border-b border-gray-800 pb-2">3. Cài Đặt Studio & Giọng Đọc</h2>
+
+        <!-- Template Style -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5">Giao diện thẻ bình luận:</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setTemplate('threads')" id="btnTplThreads" class="py-2 px-3 rounded-xl border text-xs font-semibold transition border-indigo-500 bg-indigo-500/10 text-white">Threads</button>
+            <button onclick="setTemplate('tiktok')" id="btnTplTiktok" class="py-2 px-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-400 hover:text-white text-xs font-semibold transition">TikTok</button>
+            <button onclick="setTemplate('facebook')" id="btnTplFacebook" class="py-2 px-3 rounded-xl border border-gray-700 bg-gray-900 text-gray-400 hover:text-white text-xs font-semibold transition">Facebook</button>
+          </div>
+        </div>
+
+        <!-- Dark / Light Mode -->
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400 font-semibold">Chế độ hiển thị:</span>
+          <div class="flex items-center space-x-2 bg-gray-900 p-1 rounded-lg border border-gray-800">
+            <button id="btnDark" onclick="setDarkMode(true)" class="px-2.5 py-1 rounded bg-indigo-600 text-white font-medium">Dark Mode</button>
+            <button id="btnLight" onclick="setDarkMode(false)" class="px-2.5 py-1 rounded text-gray-400 hover:text-white font-medium">Light Mode</button>
+          </div>
+        </div>
+
+        <!-- Voice Selection -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5">Giọng đọc tiếng Việt (TikTok Viral & Đa Nhân Vật):</label>
+          <select id="voiceSelect" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            <option value="dialogue-auto">🎭 Đối Thoại Đa Nhân Vật (Phân vai giống Video TikTok mẫu)</option>
+            <option value="tiktok-BV075">🔥 Thanh Niên TikTok / CapCut (BV075 - Nam Meme Viral)</option>
+            <option value="tiktok-BV074">🔥 Cô Gái TikTok / CapCut (BV074 - Nữ Review Hoạt Ngôn)</option>
+            <option value="vi-VN-NamMinhYouth">⚡ Anh Trai Sài Gòn Lầy Lội (Nam Trẻ Năng Động)</option>
+            <option value="vi-VN-HoaiMyNeural" selected>🎙 Hoài My (Nữ AI Truyền cảm, ngọt ngào)</option>
+            <option value="vi-VN-NamMinhNeural">🎙 Nam Minh (Nam AI Trầm ấm, cuốn hút)</option>
+          </select>
+        </div>
+
+        <!-- Speech Speed Slider -->
+        <div>
+          <div class="flex justify-between text-xs text-gray-400 mb-1">
+            <span>Tốc độ đọc:</span>
+            <span id="rateLabel" class="text-indigo-400 font-semibold">+0%</span>
+          </div>
+          <input type="range" id="speechRate" min="-20" max="40" value="0" step="5" oninput="updateRateLabel(this.value)" class="w-full accent-indigo-500 cursor-pointer">
+        </div>
+
+        <!-- Video Background Selector & Uploader -->
+        <div class="pt-2 border-t border-gray-800">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-semibold text-gray-300">Video nền (Background):</label>
+            <label for="bgUploadInput" class="text-[11px] text-indigo-400 hover:text-indigo-300 cursor-pointer font-medium flex items-center space-x-1">
+              <span>📁 Tải lên video mới</span>
+              <input type="file" id="bgUploadInput" accept="video/mp4,video/quicktime,video/webm" onchange="uploadCustomBackground(this)" class="hidden">
+            </label>
+          </div>
+          <select id="bgSelect" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            <option value="minecraft_parkour.mp4">🎮 Minecraft Parkour Gameplay (Chuẩn TikTok)</option>
+            <option value="sample_gradient_9_16.mp4">✨ Gradient Tối Giản ASMR</option>
+          </select>
+        </div>
+
+        <!-- Running Text / Floating Watermark (Motvongthread style) -->
+        <div class="pt-2 border-t border-gray-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-semibold text-indigo-300 flex items-center space-x-1">
+              <span>💫 Chữ chạy / Watermark viền video:</span>
+            </label>
+            <span class="text-[10px] text-gray-400">Giống @motvongthread</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="block text-[11px] text-gray-400 mb-1">Nội dung chữ:</span>
+              <input type="text" id="runningTextInput" value="@Vietcaigido?" placeholder="@tenkenh_cua_ban" 
+                     class="w-full px-2.5 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <span class="block text-[11px] text-gray-400 mb-1">Kiểu chuyển động:</span>
+              <select id="runningTextMode" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <option value="top_left" selected>📌 Góc trái trên (Chuẩn @Vietcaigido?)</option>
+                <option value="floating">🌊 Chữ trôi lơ lửng quanh video</option>
+                <option value="marquee_top">🚀 Dải chữ chạy viền trên</option>
+                <option value="marquee_bottom">⬇ Dải chữ chạy viền dưới</option>
+                <option value="both">✨ Cả hai (Chữ trôi + Viền chạy)</option>
+                <option value="none">❌ Không chữ chạy</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- BGM Selector & Auto-Detection -->
+        <div class="pt-2 border-t border-gray-800 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-semibold text-gray-300">Nhạc nền (BGM Meme):</label>
+            <span id="bgmBadgeText" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">🤖 Tự động chọn BGM meme</span>
+          </div>
+          <select id="bgmSelect" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            <option value="meme_tiktok_viral.wav" selected>🔥 Nhạc Meme TikTok Viral (Chuẩn @motvongthread)</option>
+            <option value="chill_bgm.wav">✨ Nhạc Lofi Chill Thư Giãn</option>
+          </select>
+        </div>
+
+        <!-- Channel Badge (Top-right Drama Logo) -->
+        <div class="flex items-center justify-between text-xs pt-1">
+          <span class="text-gray-400 font-semibold">Huy hiệu kênh góc phải:</span>
+          <label class="flex items-center space-x-1.5 cursor-pointer">
+            <input type="checkbox" id="chkBadge" class="rounded border-gray-700 text-indigo-600 focus:ring-0">
+            <span class="text-gray-300">Logo Drama & Tin Tức</span>
+          </label>
+        </div>
+
+        <!-- Audio Balance (BGM & SFX) -->
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-800">
+          <div>
+            <div class="flex justify-between text-[11px] text-gray-400 mb-1">
+              <span>Nhạc nền (BGM):</span>
+              <span id="bgmVolLabel" class="text-indigo-400">12%</span>
+            </div>
+            <input type="range" id="bgmVolume" min="0" max="30" value="12" oninput="document.getElementById('bgmVolLabel').innerText = this.value + '%'" class="w-full accent-indigo-500 cursor-pointer">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-gray-400 mb-1">
+              <span>Tiếng Pop SFX:</span>
+              <span id="sfxVolLabel" class="text-indigo-400">70%</span>
+            </div>
+            <input type="range" id="sfxVolume" min="0" max="100" value="70" oninput="document.getElementById('sfxVolLabel').innerText = this.value + '%'" class="w-full accent-indigo-500 cursor-pointer">
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Box 4: Live Render Action & Output Preview -->
+      <section class="glass-card rounded-2xl p-5 shadow-xl space-y-4">
+        <h2 class="text-sm font-semibold text-gray-300 border-b border-gray-800 pb-2">4. Xuất Video Hoàn Chỉnh (MP4)</h2>
+
+        <!-- Render Button -->
+        <button id="btnRender" onclick="renderVideo()" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:opacity-95 active:scale-98 font-bold text-sm text-white rounded-xl shadow-xl shadow-emerald-500/25 transition flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span id="renderBtnText">TẠO VIDEO SHORTS NGAY</span>
+        </button>
+
+        <!-- Live % Progress Box Underneath Render Button -->
+        <div id="renderProgressBox" class="hidden p-3.5 rounded-xl bg-gray-900/95 border border-emerald-500/40 text-xs space-y-2.5 shadow-lg">
+          <div class="flex items-center justify-between">
+            <span id="progressStatusText" class="text-indigo-200 font-semibold truncate pr-2">Đang khởi tạo tiến trình...</span>
+            <span id="progressPercentBadge" class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-extrabold text-sm border border-emerald-500/30">0%</span>
+          </div>
+          <div class="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden border border-gray-700">
+            <div id="progressBar" class="bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-500 h-2.5 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-gray-400">
+            <span>⚡ Xử lý đa luồng (TTS + Retina Cap + FFmpeg)</span>
+            <span id="progressElapsedText" class="text-emerald-400 font-mono font-semibold">⏱ 0.0s</span>
+          </div>
+        </div>
+
+        <!-- Video Player Display Container -->
+        <div id="videoResultWrapper" class="hidden space-y-3">
+          <div class="rounded-xl overflow-hidden bg-black aspect-[9/16] max-h-[380px] mx-auto border border-gray-800 shadow-2xl flex items-center justify-center">
+            <video id="finalVideoPlayer" controls class="w-full h-full object-contain"></video>
+          </div>
+          <a id="btnDownloadVideo" href="#" download="social_video.mp4" class="block w-full text-center py-2 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-emerald-400 border border-emerald-500/30 transition">
+            ⬇ Tải File MP4 Về Máy
+          </a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Bulk Paste Modal -->
+  <div id="bulkModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+        <h3 class="text-base font-bold text-white">📋 Dán Nhanh Nhiều Bình Luận (Bulk Paste)</h3>
+        <button onclick="closeBulkModal()" class="text-gray-400 hover:text-white">&times;</button>
+      </div>
+      <p class="text-xs text-gray-400">Dán danh sách bình luận vào ô bên dưới, mỗi dòng là một bình luận. Hệ thống sẽ tự động tạo thẻ và tổng hợp giọng đọc riêng cho từng dòng!</p>
+      <textarea id="bulkTextInput" rows="6" placeholder="Bình luận 1...&#10;Bình luận 2...&#10;Bình luận 3..." class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeBulkModal()" class="px-4 py-2 text-xs rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300">Hủy</button>
+        <button onclick="applyBulkComments()" class="px-4 py-2 text-xs rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">Nhập Bình Luận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Telegram Bot & Admin Key Manager Modal -->
+  <div id="telegramModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-3xl w-full rounded-2xl p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto border border-sky-500/30">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span>🤖 Trung Tâm Điều Khiển Telegram Bot & Quản Lý Key</span>
+            <span id="botStatusBadge" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Chưa kết nối Token</span>
+          </h3>
+          <p class="text-xs text-gray-400 mt-0.5">Admin toàn quyền: <b class="text-sky-400">@citywin2026</b> • Cơ chế bảo mật: <b>1 Key = 1 Người dùng</b> • Xóa Key là chặn ngay lập tức</p>
+        </div>
+        <button onclick="closeTelegramModal()" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <!-- Bot Token Configuration -->
+      <div class="p-4 rounded-xl bg-gray-900/90 border border-gray-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-sky-300">1. Cấu hình Telegram Bot Token (Lấy từ @BotFather):</label>
+          <span id="botCurrentTokenInfo" class="text-[11px] text-gray-400"></span>
+        </div>
+        <div class="flex gap-2">
+          <input type="password" id="botTokenInput" placeholder="Dán mã Token của Bot Telegram (ví dụ: 7123456789:AAH...)"
+                 class="flex-1 px-3 py-2 bg-gray-950 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-sky-500">
+          <button onclick="startTelegramBot()" id="btnStartBot" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl shadow transition">
+            🚀 Khởi Chạy Bot
+          </button>
+          <button onclick="stopTelegramBot()" class="px-3 py-2 bg-rose-900/60 hover:bg-rose-800 text-rose-200 text-xs font-semibold rounded-xl border border-rose-700/50 transition">
+            ⏹ Dừng
+          </button>
+        </div>
+        <p class="text-[11px] text-gray-400 leading-relaxed">
+          💡 Sau khi khởi chạy, người dùng chỉ cần gửi link bài viết vào Bot để tự động tạo và nhận video MP4. Admin <b class="text-sky-400">@citywin2026</b> có thể gõ lệnh <code class="text-emerald-300">/admin</code>, <code class="text-emerald-300">/genkey</code>, <code class="text-emerald-300">/delkey</code> ngay trong chat Telegram hoặc quản lý trực tiếp ở bảng dưới đây!
+        </p>
+      </div>
+
+      <!-- Key Generator & List -->
+      <div class="p-4 rounded-xl bg-gray-900/90 border border-gray-800 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <label class="text-xs font-bold text-emerald-400">2. Tạo & Quản Lý Key Bản Quyền (1 Key = 1 User):</label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="keyNoteInput" placeholder="Ghi chú tên khách (tùy chọn)..."
+                   class="px-2.5 py-1.5 bg-gray-950 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500">
+            <button onclick="createBotKeys(1)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition">
+              ➕ Tạo 1 Key
+            </button>
+            <button onclick="createBotKeys(5)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition">
+              ➕ Tạo 5 Key
+            </button>
+          </div>
+        </div>
+
+        <div id="keysTableContainer" class="max-h-64 overflow-y-auto space-y-2 pr-1">
+          <!-- Keys populated via JS -->
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="closeTelegramModal()" class="px-4 py-2 text-xs rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold">Đóng cửa sổ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=20261107_fast_cap"></script>
+</body>
+</html>
